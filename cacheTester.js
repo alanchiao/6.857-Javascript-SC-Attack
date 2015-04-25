@@ -5,7 +5,7 @@
 var probeBuffer = new ArrayBuffer(8192 * 1024); // 8 MB eviction buffer
 var probeView = new DataView(probeBuffer); 
 // primeView from paper - testing data retrieval
-var primeBuffer = new ArrayBuffer(8192 * 1024); // 8 MB eviction buffer
+var primeBuffer = new ArrayBuffer(8192 * 1024);
 var primeView = new DataView(primeBuffer); 
 
 // L3 cache line size
