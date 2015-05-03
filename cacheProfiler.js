@@ -19,10 +19,9 @@ for (var i=0; i<8192*1023/offset; i++) {
   S[i] = false;
 }
 
-
 function accessMembers(set) {
-  set.forEach(function(member) {
-    probeView.getUint32(member);
+  Object.keys(set).forEach(function(member) {
+    probeView.getUint32(member * offset);
   });
 }
 
@@ -32,7 +31,9 @@ function removeRandom(set) {
   delete set[untried[s]]
 }
 
-while Object.keys(S).length > 12 {
+threshold = 0.02
+
+while (Object.keys(S).length > 12) {
   // iteratively access all members of S
   accessMembers(S);
 
@@ -55,5 +56,9 @@ while Object.keys(S).length > 12 {
 
   if (diffTime1 - diffTime2 > threshold) { // then place s back into S, in same cache set
     S[s] = true;
+    console.log("Found in set: ", s)
+  }
+  if (Object.keys(S).length % 10000 === 0) {
+    console.log("Number of Elements ", Object.keys(S).length);
   }
 }
