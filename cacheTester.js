@@ -85,9 +85,11 @@ for (var round = 0; round < numRounds; round++) {
 
 var flushed1Data = toPD(flushed1);
 var unflushed1Data = toPD(unflushed1);
+var unflushed2Data = toPD(unflushed2);
+var flushed2Data = toPD(flushed2);
 
 // jqplot data visualization
-plot1 = $.jqplot("chart1", [flushed1Data, unflushed1Data], {
+plot1 = $.jqplot("chart1", [flushed1Data, unflushed1Data, unflushed2Data, flushed2Data], {
   title: "Probability Density Function : flushed vs unflushed",
   cursor: {
       show: false
@@ -106,7 +108,9 @@ plot1 = $.jqplot("chart1", [flushed1Data, unflushed1Data], {
   },
   series:[
     {label: 'flushed'},
-    {label: 'unflushed'}
+    {label: 'unflushed'},
+    {label: 'unflushed2'},
+    {label: 'flushed2'}
   ],
   legend: {
     show: true,
