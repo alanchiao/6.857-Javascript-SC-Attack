@@ -11,14 +11,14 @@ var primeBuffer = new ArrayBuffer(8192 * 1024);
 var primeView = new DataView(primeBuffer); 
 var x = 1; // page in question mb
 
+// L3 cache line size
+var offset = 64;
 // S[i] is true if "i" is in "x"'s set. S[i] is false if untried.
 var S = {}
 for (var i=0; i<8192*1023/offset; i++) {
   S[i] = false;
 }
 
-// L3 cache line size
-var offset = 64;
 
 function accessMembers(set) {
   set.forEach(function(member) {
@@ -28,8 +28,8 @@ function accessMembers(set) {
 
 function removeRandom(set) {
   untried = Object.keys(set).filter(function(member) {return !set[member];});
-  s = Math.floor(Math.random() * (Object.keys(untried).length + 1))
-  delete set[s]
+  s = Math.floor(Math.random() * Object.keys(untried).length)
+  delete set[untried[s]]
 }
 
 while Object.keys(S).length > 12 {
