@@ -9,7 +9,7 @@ var probeView = new DataView(probeBuffer);
 // primeView from paper - testing data retrieval
 var primeBuffer = new ArrayBuffer(8192 * 1024);
 var primeView = new DataView(primeBuffer); 
-var x = 1; // page in question mb
+var x = 0; // page in question mb
 
 // page size 4Kb
 var offset = 64;
