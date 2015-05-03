@@ -15,7 +15,7 @@ var primeView = new DataView(primeBuffer);
 // L3 cache line size
 var offset = 64;
 // page in question mb
-var x = 1;
+var x = 0;
 var numRounds = 1000;
 
 // initial data
