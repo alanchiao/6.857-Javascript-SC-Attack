@@ -110,7 +110,7 @@ var flushed2Data = toPD(flushed2);
 
 // jqplot data visualization
 plot1 = $.jqplot("chart1", [flushed1Data, unflushed1Data, unflushed2Data, flushed2Data], {
-  title: "Probability Density Function : Flushed vs Unflushed",
+  title: "Access Latencies : Flushed vs Unflushed",
   cursor: {
       show: false
   },
