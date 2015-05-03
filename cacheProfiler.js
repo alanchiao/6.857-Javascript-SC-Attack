@@ -9,18 +9,19 @@ var probeView = new DataView(probeBuffer);
 // primeView from paper - testing data retrieval
 var primeBuffer = new ArrayBuffer(8192 * 1024);
 var primeView = new DataView(primeBuffer); 
-var x = 1; // page in question mb
+var x = 0; // page in question mb
 
-// L3 cache line size
+// page size 4Kb
 var offset = 64;
 // S[i] is true if "i" is in "x"'s set. S[i] is false if untried.
 var S = {}
-for (var i=0; i<8192*1023/offset; i++) {
+for (var i=0; i<8192*1024/offset; i++) {
   S[i] = false;
 }
 
 function accessMembers(set) {
   Object.keys(set).forEach(function(member) {
+    // given page XXXX, access address XXXX00000
     probeView.getUint32(member * offset);
   });
 }
@@ -31,10 +32,7 @@ function removeRandom(set) {
   delete set[untried[s]]
 }
 
-threshold = 0.02
-
-while (Object.keys(S).length > 12) {
-  // iteratively access all members of S
+function diff(x) {
   accessMembers(S);
 
   var current;
@@ -53,12 +51,23 @@ while (Object.keys(S).length > 12) {
   current = primeView.getUint32(x);
   var endTime2 = window.performance.now();
   var diffTime2 = endTime2 - startTime2;
+  return diffTime1 - diffTime2;
+}
 
-  if (diffTime1 - diffTime2 > threshold) { // then place s back into S, in same cache set
+threshold = 26 * Math.pow(10, -5);
+
+while (Object.keys(S).length > 12) {
+  // iteratively access all members of S
+  
+  difference = diff(x);
+
+  if (difference > threshold) { // then place s back into S, in same cache set
     S[s] = true;
     console.log("Found in set: ", s)
   }
-  if (Object.keys(S).length % 10000 === 0) {
+  if (Object.keys(S).length % 1000 === 0) {
     console.log("Number of Elements ", Object.keys(S).length);
   }
 }
+
+console.log(S);

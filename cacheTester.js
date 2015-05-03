@@ -29,7 +29,7 @@ var flushed2 = [];
 var current;
 
 for (var round = 0; round < numRounds; round++) {
-  for (var i = 0; i < ((8192 * 1023) / offset); i++) {
+  for (var i = 0; i < ((8192 * 1024) / offset); i++) {
     current = probeView.getUint32(i * offset);
   }
 
