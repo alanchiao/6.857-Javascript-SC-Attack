@@ -13,7 +13,7 @@ var x = 1; // page in question mb
 // L3 cache line size
 var offset = 64;
 
-while (True) {
+while (true) {
   // iteratively access all members of S
   var current;
   for (var i = 0; i < ((8192 * 1023) / offset); i++) {
@@ -36,7 +36,7 @@ while (True) {
   var endTime2 = window.performance.now();
   var diffTime2 = endTime2 - startTime2;
 
-  if (diffTime1 - diffTime > threshold) { // then place s back into S, in same cache set
+  if (diffTime1 - diffTime2 > threshold) { // then place s back into S, in same cache set
     
   }
 }
