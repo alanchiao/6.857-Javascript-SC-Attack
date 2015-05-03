@@ -3,7 +3,32 @@
 // Check if your system has a similar cache.
 
 // should need to use pointer chasing method from : http://www.tau.ac.il/~tromer/papers/cache-joc-20090619.pdf - Why not?
+// convert list of data points to probability density
+var toPD = function(data) {
+  counts = {}
+  for (var i = 0; i < data.length; i++) {
+    var el = data[i];
+    if (el in counts) {
+      counts[el] += 1;
+    } else {
+      counts[el] = 1;
+    }
+  }
 
+  pdData = []
+  for (var el in counts) {
+    pdData.push([el, counts[el]/data.length]);
+  }
+
+  pdData.sort(function(a,b) {return a[0] - b[0];});
+  while(pdData[pdData.length - 1][0] > 50) {
+    pdData.pop(); // seems to be outliers
+  }
+
+  return pdData;
+}
+
+$(document).ready(function() {
 // probeView from paper - for invalidation
 var probeBuffer = new ArrayBuffer(8192 * 1024); // 8 MB eviction buffer
 var probeView = new DataView(probeBuffer); 
@@ -15,12 +40,19 @@ var primeView = new DataView(primeBuffer);
 var offset = 64;
 // page in question mb
 var x = 1;
+var numRounds = 100;
+
+// initial data
+var flushed1 = [];
+var unflushed1 = [];
+var unflushed2 = [];
+var flushed2 = [];
 
 
 // invalidation of all cache sets in L3 buffer
 var current;
 
-for (var round = 0; round < 100; round++) {
+for (var round = 0; round < numRounds; round++) {
   for (var i = 0; i < ((8192 * 1023) / offset); i++) {
     current = probeView.getUint32(i * offset);
   }
@@ -54,15 +86,68 @@ for (var round = 0; round < 100; round++) {
   var endTime4 = window.performance.now();
   var diffTime4 = endTime4 - startTime4;
 
+  /**
   console.log("ROUND " + round);
   console.log(diffTime1 - diffTime2); // diffTime1 generally should be > diffTime2 : TRUE
   console.log(diffTime3 - diffTime2); // should be around 0 / alternate between positive and negative? : TRUE
   console.log(diffTime4 - diffTime1); // should be around 0 / alternate between positive and negative? : TRUE - round 0 is strangely always positive
+  **/
 
-  /**
+  console.log("ROUND " + round);
   console.log(diffTime1);
   console.log(diffTime2);
   console.log(diffTime3);
   console.log(diffTime4);
-  **/
+
+  flushed1.push(Math.floor(diffTime1 * 100000));
+  unflushed1.push(Math.floor(diffTime2 * 100000));
+  unflushed2.push(Math.floor(diffTime3 * 100000));
+  flushed2.push(Math.floor(diffTime4 * 100000));
 }
+
+var flushed1Data = toPD(flushed1);
+
+// Data processing and visualization
+plot1 = $.jqplot("chart1", [flushed1Data], {
+        title: "Probability Density Function : flushed vs unflushed",
+        cursor: {
+            show: false
+        },
+        highlighter: {
+            show: true,
+            showMarker: false,
+            useAxesFormatters: false,
+            formatString: '%d, %.1f'
+        },
+        axesDefaults: {
+            labelRenderer: $.jqplot.CanvasAxisLabelRenderer
+        },
+        seriesDefaults: {
+            showMarker: false
+        },
+        axes: {
+            xaxis: {
+                label: 'Access Latency (10^-5 seconds)',
+                pad:0,
+                ticks: [],
+                tickOptions: {
+                    formatString: "%d"
+                }
+            },
+            yaxis: {
+                label: 'Probability Density (%)',
+                forceTickAt0: true,
+                pad: 0
+            }
+        },
+        grid: {
+            drawBorder: false,
+            shadow: false,
+            background: "white"
+        },
+        canvasOverlay: {
+            show: true
+        }
+    });
+
+});
