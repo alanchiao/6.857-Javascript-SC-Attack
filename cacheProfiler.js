@@ -24,12 +24,12 @@ for (var i=0; i<8192*1024/offset; i++) {
 // given el works, chip down the set of elements to examine
 function chipDown(el) {
   S2 = {}
-  S2[el] = true;
   for (var i=0; i<8192*1024/offset; i++) {
     if (((i * offset * 8) >> 6) % Math.pow(2, 7) == 0) { // then share bits 6 through 12
       S2[i] = false;
     }
   }
+  S2[el] = true;
   S = S2;
 }
 
