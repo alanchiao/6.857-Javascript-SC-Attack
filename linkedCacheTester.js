@@ -17,8 +17,8 @@ var primeView = new DataView(primeBuffer);
 // L3 cache line size
 var offset = 64;
 // page in question mb
-var x = 1;
-var numRounds = 1000;
+var x = 0;
+var numRounds = 5000;
 
 // initial data
 var flushed1 = [];
@@ -144,7 +144,8 @@ plot1 = $.jqplot("chart1", [flushed1Data, unflushed1Data, unflushed2Data, flushe
           tickOptions: {
               formatString: "%d"
           },
-          max: 50
+          max: 50,
+          min: 0
       },
       yaxis: {
           label: 'Probability Density (%)',
