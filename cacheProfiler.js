@@ -1,115 +1,81 @@
+var probeBuffer = new ArrayBuffer(8192 * 1024);
+var probeView = new DataView(probeBuffer);
 
-// Algorithm one from the paper
-// Computer Specs : Alan - 2.3GHz Intel Core i7 - 6 MB L3 cache
-//                  Might have 8192 cache sets (2^13) with 12 lines of 64 bytes (2^6)
+var primeBuffer = new ArrayBuffer(8192 * 1024); // will find eviction sets in this
+var primeView = new DataView(primeBuffer);
 
-// probeView from paper - for invalidation
-var probeBuffer = new ArrayBuffer(8192 * 1024); // 8 MB eviction buffer
-var probeView = new DataView(probeBuffer); 
-// primeView from paper - testing data retrieval
-var primeBuffer = new ArrayBuffer(8192 * 1024);
-var primeView = new DataView(primeBuffer); 
-var x = 0; // page in question mb
-
-// page size 4Kb
 var offset = 64;
-// S[i] is true if "i" is in "x"'s set. S[i] is false if untried.
-var S = {}
-var s;
-var sizeS = 0;
-for (var i=0; i<8192*1024/offset; i++) {
-  S[i] = false;
+
+
+var pagesToOffset = []; // array of arrays, each representing an non-canonical page
+
+// general algorithm : for each offset, representing a cache line, find the 11 others.
+// in the 8MB array, we have 131k offsets (8192 * 1024 / 64 = 131k)
+//
+// 12 offsets form a cache set. 8192 cache sets.
+// Need to take advantage of the fact that 12 offsets can only be together if they share bits 6 - 12. --> Sets of 8192 cache sets.
+
+
+// iterate through entirety of probe buffer
+function iterateProbeBuffer() {
+  var current;
+  for (var cline = 0; cline < ((8192 * 1024) / offset); cline++) {
+    current = probeView.getUint32(cline * offset);
+  } 
 }
 
-// given el works, chip down the set of elements to examine
-function chipDown(el) {
-  S2 = {}
-  for (var i=0; i<8192*1024/offset; i++) {
-    if (((i * offset * 8) >> 6) % Math.pow(2, 7) == 0) { // then share bits 6 through 12
-      S2[i] = false;
+// find set of cachelines that share bits 6 - 12 with a given cacheline number
+function findSearchSet(cachelineNum) {
+  searchSet = []
+  for (var cline = 0; cline < 8192 * 1024/offset; cline++) {
+    if (cline === cachelineNum) { // don't want to search self again
+      continue;
     }
+
+    if (((cline * offset * 8) >> 6) % Math.pow(2, 7) === ((cachelineNum * offset * 8) >> 6) % Math.pow(2, 7)) {
+      searchSet.push(cline);
+    } 
   }
-  S2[el] = true;
-  S = S2;
+  return searchSet;
 }
 
-function accessMembers(set) {
-  Object.keys(set).forEach(function(member) {
-    probeView.getUint32(member * offset);
-  });
-}
 
-// -1 if cannot remove any
-function removeRandom(set) {
-  untried = Object.keys(set).filter(function(member) {return !set[member];});
-  if (Object.keys(untried).length == 0) {
-    s = -1;
-  } else {
-    s = Math.floor(Math.random() * Object.keys(untried).length)
-    delete set[untried[s]]
-  }
-
-}
-
-function diff(x) {
-  accessMembers(S);
+function checkInSameCacheSet(cline1, cline2) {
+  iterateProbeBuffer();
 
   var current;
-  // first retrieval, hypothesized to be from RAM
+
   var startTime1 = window.performance.now();
-  current = primeView.getUint32(x);
+  current = primeView.getUint32(cline1 * offset);
   var endTime1 = window.performance.now();
   var diffTime1 = endTime1 - startTime1;
-
-  // select random page s from S and remove it
-  removeRandom(S)
-
-  // iteratively access all members of S\s
-  accessMembers(S);
-  // second retrieval, hope it is significantly faster (if not, then not in same cache set as x)
+  
   var startTime2 = window.performance.now();
-  current = primeView.getUint32(x);
+  current = primeView.getUint32(cline2 * offset);
   var endTime2 = window.performance.now();
   var diffTime2 = endTime2 - startTime2;
-  return diffTime1 - diffTime2;
-}
-
-threshold = 40 * Math.pow(10, -5);
-var elInSameCacheSet;
-while (true) {
-  // iteratively access all members of S to find first item that is in same cache set as x
-  var difference = diff(x);
-
-  if (difference > threshold) { // then place s back into S, in same cache set
-    S[s] = true;
-    console.log("Found in set: ", s)
-    chipDown(s);
-    break
-  }
-  if (Object.keys(S).length % 100 === 0) {
-    console.log("Number of Elements ", Object.keys(S).length);
+  console.log("diffTime1");
+  console.log(diffTime1);
+  console.log("diffTime2");
+  console.log(diffTime2);
+  if ((diffTime1 - diffTime2 > 16 * Math.pow(10, -5)) {
+    return true;
+  } else {
+    return false;
   }
 }
 
-/**
-while (Object.keys(S).length > 12) {
-  // iteratively access all members of S
-  var difference = diff(x);
-
-  if (s == -1) {
-    break;
+// find cache set of 11 other cache lines in the same
+// cache set as cline
+function findCacheSet(targetCline) {
+  var searchSet = findSearchSet(targetCline);
+  var cacheSet = [targetCline]
+  for (var i = 0; i < searchSet.length; i++) {
+    if (checkInSameCacheSet(targetCline, searchSet[i]) === true) {
+      cacheSet.push(searchSet[i])
+    }
   }
-
-  if (difference > threshold) { // then place s back into S, in same cache set
-    S[s] = true;
-    console.log("Found in set: ", s)
-  }
-  if (Object.keys(S).length % 100 === 0) {
-    console.log("Number of Elements ", Object.keys(S).length);
-  }
+  return cacheSet;
 }
 
-console.log(S);
-**/
-
-
+console.log(findCacheSet(0));
