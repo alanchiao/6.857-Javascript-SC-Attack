@@ -16,7 +16,7 @@ var primeView = new DataView(primeBuffer);
 var offset = 64;
 // page in question mb
 var x = 0;
-var numRounds = 5000;
+var numRounds = 500;
 
 // initial data
 var flushed1 = [];
@@ -124,7 +124,7 @@ plot1 = $.jqplot("chart1", [flushed1Data, unflushed1Data, unflushed2Data, flushe
           tickOptions: {
               formatString: "%d"
           },
-          max: 50,
+          max: 100,
           min: 0
       },
       yaxis: {
@@ -167,9 +167,6 @@ var toPD = function(data) {
 
   pdData.sort(function(a,b) {return a[0] - b[0];});
   // remove outliers
-  while(pdData[pdData.length - 1][0] > 50) {
-    pdData.pop();
-  }
 
   return pdData;
 }
